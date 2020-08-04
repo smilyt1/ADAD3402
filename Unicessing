@@ -1,0 +1,90 @@
+using UnityEngine;
+using Unicessing;
+public class ColorChartForUnicessing : UGraphics
+{
+    [SerializeField]
+    private GameObject handLeft;
+    [SerializeField]
+    private GameObject handRight;
+
+    private const int ChartWidth = 8;
+    private const int ChartOffset = -128;
+    private const float ChartScale = 0.001f;
+    private const float ColorDelta = 34;
+    private const int PosDelta = 32;
+
+    private Vector3 handLeftPos, handRightPos;
+    private Quaternion handLeftRot, handRightRot;
+
+    protected override void Setup()
+    {
+        rotateDegrees();
+        stroke(100, 200, 255);
+    }
+
+    protected override void Draw()
+    {
+        UpdateHands();
+        DrawHands();
+        DrawColorChart();
+    }
+
+    void UpdateHands()
+    {
+        if ((handLeft == null) || (handRight == null))
+        {
+            Debug.LogError("Please set hand objects to hand fields on the inspector.");
+        }
+        else
+        {
+            handLeftPos = handLeft.transform.position;
+            handRightPos = handRight.transform.position;
+            handLeftRot = handLeft.transform.rotation;
+            handRightRot = handRight.transform.rotation;
+        }
+    }
+
+    void DrawHands()
+    {
+        DrawHandBox(handLeftPos, handLeftRot);
+        DrawHandBox(handRightPos, handRightRot);
+    }
+
+    void DrawHandBox(Vector3 pos, Quaternion quat)
+    {
+        pushMatrix();
+        translate(pos);
+        rotate(quat.eulerAngles);
+        noFill();
+        box(0.000001f);
+        popMatrix();
+    }
+
+    void DrawColorChart()
+    {
+        pushMatrix();
+        for (float x = 0; x <= ChartWidth; x++)
+        {
+            for (float y = 0; y <= ChartWidth; y++)
+            {
+                for (float z = 0; z <= ChartWidth; z++)
+                {
+                    rotate(handLeftPos.z * 1f, handLeftPos.x * 1f, handLeftPos.y * 1f);
+                    pushMatrix();
+                    Color col = new Color(ColorDelta, ColorDelta, ColorDelta);
+                    stroke(col);
+                    fill(120);
+                    float posX = (x * PosDelta + ChartOffset) * ChartScale;
+                    float posY = (y * PosDelta + ChartOffset) * ChartScale + handRightPos.y / 3;
+                    float posZ = (z * PosDelta + ChartOffset) * ChartScale;
+                    translate(posX, posY, posZ);
+                    translate(0.5f, 0.5f, 0.5f);
+                    rotate(handRightRot.eulerAngles);
+                    sphere(0.05f);
+                    popMatrix();
+                }
+            }
+        }
+        popMatrix();
+    }
+}
