@@ -7,11 +7,11 @@ public class ColorChartForUnicessing : UGraphics
     [SerializeField]
     private GameObject handRight;
 
-    private const int ChartWidth = 8;
-    private const int ChartOffset = -128;
-    private const float ChartScale = 0.001f;
-    private const float ColorDelta = 34;
-    private const int PosDelta = 32;
+    private const int ChartWidth = 5; // Number of rows
+    private const int ChartOffset = -300; // Width of the shape
+    private const float ChartScale = 0.001f; // Size & Scale of the shape
+    private const float ColorDelta = 0.005f; // Color of the outlines
+    private const int PosDelta = 32; // Gaps between the rows
 
     private Vector3 handLeftPos, handRightPos;
     private Quaternion handLeftRot, handRightRot;
@@ -19,7 +19,7 @@ public class ColorChartForUnicessing : UGraphics
     protected override void Setup()
     {
         rotateDegrees();
-        stroke(100, 200, 255);
+        //stroke(100, 200, 255);
     }
 
     protected override void Draw()
@@ -56,7 +56,7 @@ public class ColorChartForUnicessing : UGraphics
         translate(pos);
         rotate(quat.eulerAngles);
         noFill();
-        box(0.000001f);
+        box(1);
         popMatrix();
     }
 
@@ -73,14 +73,14 @@ public class ColorChartForUnicessing : UGraphics
                     pushMatrix();
                     Color col = new Color(ColorDelta, ColorDelta, ColorDelta);
                     stroke(col);
-                    fill(120);
-                    float posX = (x * PosDelta + ChartOffset) * ChartScale;
-                    float posY = (y * PosDelta + ChartOffset) * ChartScale + handRightPos.y / 3;
-                    float posZ = (z * PosDelta + ChartOffset) * ChartScale;
-                    translate(posX, posY, posZ);
-                    translate(0.5f, 0.5f, 0.5f);
+                    fill(col);
+                    float posX = (x * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f);
+                    float posY = (y * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f) + handRightPos.y / 3;
+                    float posZ = (z * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f);
+                    translate(posX, posY, posZ); // Displaces rows
+                    translate(0.5f, 0.5f, 0.5f); // Displaces rows
                     rotate(handRightRot.eulerAngles);
-                    sphere(0.05f);
+                    box(0.1f); // Size of the Cubes
                     popMatrix();
                 }
             }
