@@ -1,5 +1,8 @@
 using UnityEngine;
 using Unicessing;
+using UnityEngine.XR;
+using System.Collections.Generic;
+
 public class ColorChartForUnicessing : UGraphics
 {
     [SerializeField]
@@ -7,28 +10,65 @@ public class ColorChartForUnicessing : UGraphics
     [SerializeField]
     private GameObject handRight;
 
+    private InputDevice targetDevice;
+
     private const int ChartWidth = 5; // Number of rows
     private const int ChartOffset = -300; // Width of the shape
     private const float ChartScale = 0.001f; // Size & Scale of the shape
-    private const float ColorDelta = 0.005f; // Color of the outlines
+    private const float ColorDelta = 255; // Color of the outlines
     private const int PosDelta = 32; // Gaps between the rows
 
     private Vector3 handLeftPos, handRightPos;
     private Quaternion handLeftRot, handRightRot;
 
+    private float ChartScale2;
+    private float ChartWidth2;
+    private float ChartOffset2;
+    private float PosDelta2;
+
     protected override void Setup()
     {
         rotateDegrees();
-        //stroke(100, 200, 255);
+        List<InputDevice> devices = new List<InputDevice>();
+        InputDeviceCharacteristics rightControllerCharacteristics = InputDeviceCharacteristics.Right | InputDeviceCharacteristics.Controller;
+        InputDevices.GetDevicesWithCharacteristics(rightControllerCharacteristics, devices);
+
+        foreach (var item in devices)
+        {
+            Debug.Log(item.name + item.characteristics);
+        }
+
+        if (devices.Count > 0)
+        {
+            targetDevice = devices[0];
+        }
     }
 
     protected override void Draw()
     {
         UpdateHands();
-        DrawHands();
         DrawColorChart();
-    }
 
+        if (targetDevice.TryGetFeatureValue(CommonUsages.primaryButton, out bool primaryButtonValue) && primaryButtonValue)
+        {
+            Debug.Log("Pressing Primary Button");
+        }
+
+        if (targetDevice.TryGetFeatureValue(CommonUsages.secondaryButton, out bool secondaryButtonValue) && secondaryButtonValue)
+        {
+            Debug.Log("Pressing Secondary Button");
+        }
+
+        if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue) && triggerValue > 0.1f)
+        {
+            Debug.Log("Trigger pressed " + triggerValue);
+        }
+
+        if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue) && gripValue > 0.1f)
+        {
+            Debug.Log("Grip pressed " + gripValue);
+        }
+    }
     void UpdateHands()
     {
         if ((handLeft == null) || (handRight == null))
@@ -44,43 +84,51 @@ public class ColorChartForUnicessing : UGraphics
         }
     }
 
-    void DrawHands()
-    {
-        DrawHandBox(handLeftPos, handLeftRot);
-        DrawHandBox(handRightPos, handRightRot);
-    }
-
-    void DrawHandBox(Vector3 pos, Quaternion quat)
-    {
-        pushMatrix();
-        translate(pos);
-        rotate(quat.eulerAngles);
-        noFill();
-        box(1);
-        popMatrix();
-    }
-
     void DrawColorChart()
     {
         pushMatrix();
-        for (float x = 0; x <= ChartWidth; x++)
+
+        if (targetDevice.TryGetFeatureValue(CommonUsages.secondaryButton, out bool secondaryButtonValue) && secondaryButtonValue)
         {
-            for (float y = 0; y <= ChartWidth; y++)
+            ChartWidth2 = Random.Range(ChartWidth - 5, ChartWidth + 5);
+        }
+
+        for (float x = 0; x <= ChartWidth2; x++)
+        {
+            for (float y = 0; y <= ChartWidth2; y++)
             {
-                for (float z = 0; z <= ChartWidth; z++)
+                for (float z = 0; z <= ChartWidth2; z++)
                 {
                     rotate(handLeftPos.z * 1f, handLeftPos.x * 1f, handLeftPos.y * 1f);
                     pushMatrix();
                     Color col = new Color(ColorDelta, ColorDelta, ColorDelta);
                     stroke(col);
                     fill(col);
-                    float posX = (x * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f);
-                    float posY = (y * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f) + handRightPos.y / 3;
-                    float posZ = (z * PosDelta + ChartOffset) * Random.Range(ChartScale, ChartScale + 0.001f);
+
+                    if (targetDevice.TryGetFeatureValue(CommonUsages.primaryButton, out bool primaryButtonValue) && primaryButtonValue)
+                    {
+                        ChartScale2 = Random.Range(ChartScale, ChartScale + 0.005f);
+                    }
+
+                    if (targetDevice.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue) && triggerValue > 0.1f)
+                    {
+                        ChartOffset2 = Random.Range(ChartOffset, ChartOffset + (triggerValue * 1000));
+                    }
+
+                    if (targetDevice.TryGetFeatureValue(CommonUsages.grip, out float gripValue) && gripValue > 0.1f)
+                    {
+                        PosDelta2 = Random.Range(PosDelta - 100, PosDelta + (gripValue * 100));
+                    }
+
+                    float posX = (x * PosDelta2 + ChartOffset2) * ChartScale2;
+                    float posY = (y * PosDelta2 + ChartOffset2) * ChartScale2 + handRightPos.y / 3;
+                    float posZ = (z * PosDelta2 + ChartOffset2) * ChartScale2;
+
                     translate(posX, posY, posZ); // Displaces rows
                     translate(0.5f, 0.5f, 0.5f); // Displaces rows
+
                     rotate(handRightRot.eulerAngles);
-                    box(0.1f); // Size of the Cubes
+                    box(0.07f); // Size of the Cubes
                     popMatrix();
                 }
             }
